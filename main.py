@@ -3,11 +3,11 @@ from pydantic import BaseModel
 app = FastAPI()
 
 class Item(BaseModel):
-    id : int
-    name : str
-    description : str
-    price : float
-    quantity : int
+    id : int | None = None
+    name : str | None = None 
+    description : str | None = None
+    price : float | None = None 
+    quantity : int | None = None
     
 products = [
     Item(id=1, name="Laptop", description="A high-performance laptop", price=999.99, quantity=10),
@@ -36,3 +36,36 @@ def get_item(item_id: int):
 def create_item(item: Item):
     products.append(item)
     return item
+
+@app.put("/item/{item_id}")
+def update_item(item_id: int, updated_item: Item):
+    for index, item in enumerate(products):
+        if item.id == item_id:
+            products[index] = updated_item
+            return updated_item
+    return {"error": "Item not found"}
+
+@app.patch("/item/{item_id}")
+def partial_update_item(item_id: int, updated_fields: Item):
+    for index, item in enumerate(products):
+        if item.id == item_id:
+            updated_item = products[index]
+            if updated_fields.name is not None:
+                updated_item.name = updated_fields.name
+            if updated_fields.description is not None:
+                updated_item.description = updated_fields.description
+            if updated_fields.price is not None:
+                updated_item.price = updated_fields.price
+            if updated_fields.quantity is not None:
+                updated_item.quantity = updated_fields.quantity
+            products[index] = updated_item
+            return updated_item
+    return {"error": "Item not found"}
+
+@app.delete("/item/{item_id}")
+def delete_item(item_id: int):
+    for index, item in enumerate(products):
+        if item.id == item_id:
+            del products[index]
+            return {"message": "Item deleted"}
+    return {"error": "Item not found"}
